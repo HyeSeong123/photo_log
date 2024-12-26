@@ -1,6 +1,8 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QStackedWidget, QLabel
 from PyQt5.QtGui import QPixmap, QPalette, QBrush, QFont
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QPropertyAnimation, QRect
+import tkinter as tk
+
 import sys
 
 class MainWindow(QMainWindow):
@@ -12,8 +14,20 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("앨범 정리 프로그램")
         self.setGeometry(100,100,1000,1000)
         
-        self.set_background()
+        self.central_stack = QStackedWidget(self)
+        self.setCentralWidget(self.central_stack)
         
+        self.main_frame = self.create_main_frame()
+        self.photo_view_frame = self.organize_frame()
+        
+        self.central_stack.addWidget(self.main_frame)
+        self.central_stack.addWidget(self.photo_organize_frame)
+        self.central_stack.setCurrentWidget(self.main_frame)
+        
+    def create_main_frame(self):
+        frame = QWidget()
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignCenter)
         self.add_buttons()
         
     def set_background(self):
@@ -25,56 +39,12 @@ class MainWindow(QMainWindow):
     
     def resizeEvent(self, event):
         self.set_background()
-    
-    def add_buttons(self):
-        main_layout = QVBoxLayout()
-        main_layout.setAlignment(Qt.AlignCenter)
-        
-        btn_layout = QVBoxLayout()
-        btn_layout.setAlignment(Qt.AlignCenter)
-        
-        spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        btn_layout.addSpacerItem(spacer)
-        
-        button_texts = ["사진 정리", "사진 보기", "종료"]
-        for text in button_texts:
-            button = QPushButton(text)
-            button.setStyleSheet("""
-                                 QPushButton {
-                                     background-color: rgba(0, 0, 0, 0.6);
-                                     border: 2px solid #FFFFFF;
-                                     border-radius: 15px;
-                                     margin-left : 55px;
-                                     margin-bottom : 15px;
-                                     font-size: 16px;
-                                     font-weight : bold;
-                                     color: white;
-                                     padding: 10px 20px;
-                                 }
-                                 QPushButton:hover {
-                                    background-color: rgba(255,255,255, 0.3);
-                                    color : black;
-                                 }
-                                 QPushButton:pressed {
-                                     background-color: rgba(255,255,255,0.5);
-                                 }
-                                 """)
-            button.setFont(QFont("Arial",14))
-            button.setCursor(Qt.PointingHandCursor)
-            button.clicked.connect(self.button_action)
-            btn_layout.addWidget(button)
-            
-        btn_layout.addSpacerItem(spacer)
-        
-        central_widget = QWidget()
-        central_widget.setLayout(btn_layout)
-        self.setCentralWidget(central_widget)
         
     def button_action(self):
         sender = self.sender()
         
         if sender.text() == "사진 정리":
-            print("사진 정리")
+            album_organize();
         elif sender.text() == "사진 보기":
             print("사진 보기")
         elif sender.text() == "종료":
