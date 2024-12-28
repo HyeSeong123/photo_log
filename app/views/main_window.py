@@ -1,12 +1,12 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QStackedWidget, QLabel
 from PyQt5.QtGui import QPixmap, QPalette, QBrush, QFont, QFontDatabase
 from PyQt5.QtCore import Qt, QPropertyAnimation, QRect
-import tkinter as tk
 from . import album_organize
 import sys
+import tkinter as tk
 
 class MainWindow(QMainWindow):
-    QFontDatabase.addApplicationFont("D:/python_project/test_V2/photo_log/resources/font/BMDOHYEON_ttf.ttf")
+    
     def __init__(self):
         super().__init__()
         self.init_ui()
@@ -46,29 +46,34 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignCenter)
         
-        button_texts = ["사진 정리", "사진 보기", "종료"]
+        custom_font = QFont("BMDOHYEON",18)
+        custom_font.setStyleStrategy(QFont.PreferAntialias)
+        
+        button_texts = ["사진 정리", "사진 보기", "종료", "다람쥐"]
         for text in button_texts:
             button = QPushButton(text)
-            button.setFont(QFont("BMDOHYEON_ttf",14))
-            button.setStyleSheet("""
-                                    QPushButton{
+            button.setFont(custom_font)
+            
+            print(f"{text} 버튼에 적용된 폰트:", button.font().family())
+            button.setStyleSheet(f"""
+                                    QPushButton{{
+                                        font-family: "{custom_font.family()}";
                                         border: 2px solid #FFFFFF;
                                         margin-left : 60px;
                                         margin-bottom : 15px;
                                         border-radius: 15px;
                                         font-size: 18px;
-                                        font-weight: bold;
                                         color: black;
                                         padding: 10px 20px;
                                         background-color: rgba(0, 0, 0, 0);
-                                    }
-                                    QPushButton:hover{
+                                    }}
+                                    QPushButton:hover{{
                                         background-color: rgba(255, 255, 255, 0.3);
                                         color: black;
-                                    }
-                                    QPushButton:pressed{
+                                    }}
+                                    QPushButton:pressed{{
                                         background-color: rgba(255, 255, 255, 0.5);
-                                    }
+                                    }}
                                  """)
             button.setCursor(Qt.PointingHandCursor)
             button.clicked.connect(self.button_action)
