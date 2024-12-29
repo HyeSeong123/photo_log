@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt, QPropertyAnimation, QRect
 from . import album_organize
 import sys
 import tkinter as tk
-
+import os
 class MainWindow(QMainWindow):
     
     def __init__(self):
@@ -15,6 +15,18 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("앨범 정리 프로그램")
         self.setGeometry(100,100,1000,1000)
         
+        font_path = "D:/python_project/test_V2/photo_log/resources/font/BMDOHYEON_ttf.ttf"  # 폰트 파일 경로
+        if os.path.exists(font_path):
+            font_id = QFontDatabase.addApplicationFont(font_path)
+            if font_id != -1:
+                self.custom_font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+            else:
+                print("폰트 로드 실패")
+                self.custom_font_family = "Arial"  # 기본 폰트로 대체
+        else:
+            print("폰트 파일을 찾을 수 없음")
+            self.custom_font_family = "Arial"  # 기본 폰트로 대체
+            
         self.central_stack = QStackedWidget(self)
         self.setCentralWidget(self.central_stack)
         
@@ -46,23 +58,18 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignCenter)
         
-        custom_font = QFont("BMDOHYEON",18)
-        custom_font.setStyleStrategy(QFont.PreferAntialias)
+        custom_font = QFont(self.custom_font_family, 16)
         
-        button_texts = ["사진 정리", "사진 보기", "종료", "다람쥐"]
+        button_texts = ["사진 정리", "사진 보기", "종료"]
         for text in button_texts:
             button = QPushButton(text)
             button.setFont(custom_font)
-            
-            print(f"{text} 버튼에 적용된 폰트:", button.font().family())
             button.setStyleSheet(f"""
                                     QPushButton{{
-                                        font-family: "{custom_font.family()}";
                                         border: 2px solid #FFFFFF;
                                         margin-left : 60px;
                                         margin-bottom : 15px;
                                         border-radius: 15px;
-                                        font-size: 18px;
                                         color: black;
                                         padding: 10px 20px;
                                         background-color: rgba(0, 0, 0, 0);
