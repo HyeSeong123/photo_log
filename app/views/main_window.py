@@ -1,10 +1,11 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QStackedWidget, QLabel
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QStackedWidget, QLineEdit, QProgressBar
 from PyQt5.QtGui import QPixmap, QPalette, QBrush, QFont, QFontDatabase
-from PyQt5.QtCore import Qt, QPropertyAnimation, QRect
+from PyQt5.QtCore import Qt
 from . import album_organize
 import sys
 import tkinter as tk
 import os
+
 class MainWindow(QMainWindow):
     
     def __init__(self):
@@ -12,7 +13,7 @@ class MainWindow(QMainWindow):
         self.init_ui()
         
     def init_ui(self):
-        self.setWindowTitle("앨범 정리 프로그램")
+        self.setWindowTitle("Photo Log")
         self.setGeometry(100,100,1000,1000)
         
         font_path = "D:/python_project/test_V2/photo_log/resources/font/BMDOHYEON_ttf.ttf"  # 폰트 파일 경로
@@ -31,28 +32,31 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.central_stack)
         
         self.main_frame = self.create_main_frame()
-        self.photo_organize_frame = self.create_photo_organize_frame()
-        
         self.central_stack.addWidget(self.main_frame)
-        self.central_stack.addWidget(self.photo_organize_frame)
+        
+        self.organize_frame = self.create_organize_frame()
+        self.central_stack.addWidget(self.organize_frame)
+        
         self.central_stack.setCurrentWidget(self.main_frame)
-    
-    def set_background(self):
-        background_img = "D:/python_project/test_V2/photo_log/resources/img/album_img.webp"
-        
-        palette = QPalette()
-        pixmap = QPixmap(background_img).scaled(
-            self.width(),
-            self.height(),
-            Qt.KeepAspectRatioByExpanding,
-            Qt.SmoothTransformation
-        )
-        palette.setBrush(QPalette.Background, QBrush(pixmap))
-        self.setPalette(palette)
-        
+        self.set_background("D:/python_project/test_V2/photo_log/resources/img/album_img.webp")
+    def set_background(self, img_path):
+        if os.path.exists(img_path):
+            pixmap = QPixmap(img_path).scaled(
+                self.width(),
+                self.height(),
+                Qt.KeepAspectRatioByExpanding,
+                Qt.SmoothTransformation
+            )
+            palette = QPalette()
+            palette.setBrush(QPalette.Window, QBrush(pixmap))
+            self.setPalette(palette)
+        else:
+            print(f"배경 이미지 {img_path}를 찾을 수 없습니다.")
+            
     def resizeEvent(self, event):
-        self.set_background()
-    
+        print("창 크기 변경 감지")
+        self.set_background("D:/python_project/test_V2/photo_log/resources/img/album_img.webp")
+        super().resizeEvent(event)
     def create_main_frame(self):
         frame = QWidget()
         layout = QVBoxLayout()
@@ -89,39 +93,51 @@ class MainWindow(QMainWindow):
         frame.setLayout(layout)
         return frame
     
-    def create_photo_organize_frame(self):
+    def create_organize_frame(self):
         frame = QWidget()
-        label = QLabel("앨범 정리")
-        label.setFont(QFont("Arial",20))
-        label.setAlignment(Qt.AlignCenter)
-        
         layout = QVBoxLayout()
-        layout.addWidget(label)
-        frame.setLayout(layout)
-        return frame
+        layout.setAlignment(Qt.AlignCenter)
         
+        self.source_folder_input = QLineEdit()
+        self.source_folder_input.setPlaceholderText("정리할 폴더 경로")
+        layout.addWidget(self.source_folder_input)
+        
+        self.target_folder_input = QLineEdit()
+        self.target_folder_input.setPlaceholderText("저장할 폴더 경로")
+        layout.addWidget(self.target_folder_input)
+
+        self.folder_name_input = QLineEdit()
+        self.folder_name_input.setPlaceholderText("폴더 이름")
+        layout.addWidget(self.folder_name_input)
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setValue(0)
+        layout.addWidget(self.progress_bar)        
+        
+        start_button = QPushButton("정리 시작")
+        layout.addWidget(start_button)
+        
+        back_button = QPushButton("뒤로가기")
+        back_button.clicked.connect(self.go_back_to_main)
+        layout.addWidget(back_button)
+        
+        frame.setLayout(layout)
+        return frame 
+    
     def button_action(self):
         sender = self.sender()
         
         if sender.text() == "사진 정리":
-            self.start_photo_organize()
+            self.set_background("D:/python_project/test_V2/photo_log/resources/img/polaroid.webp")
+            self.show_organize_frame()
         elif sender.text() == "사진 보기":
             print("사진 보기")
         elif sender.text() == "종료":
             QApplication.quit()
-    
-    def start_photo_organize(self):
-        self.switch_frame(self.photo_organize_frame)
+
+    def show_organize_frame(self):
+        self.central_stack.setCurrentWidget(self.organize_frame)
         
-        album_organize.organize_photos()
-    
-    def switch_frame(self, frame):
-        current_rect = self.central_stack.geometry()
-        target_rect = QRect(current_rect.x(), current_rect.y(), self.width(), self.height())
-        
-        animation = QPropertyAnimation(self.central_stack, b"geometry")
-        animation.setDuration(500)
-        animation.setStartValue(current_rect)
-        animation.setEndValue(target_rect)
-        animation.finished.connect(lambda: self.central_stack.setCurrentWidget(frame))
-        animation.start()
+    def go_back_to_main(self):
+        self.set_background("D:/python_project/test_V2/photo_log/resources/img/album_img.webp")
+        self.central_stack.setCurrentWidget(self.main_frame)
