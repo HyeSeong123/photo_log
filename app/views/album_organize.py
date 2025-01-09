@@ -17,7 +17,10 @@ class OrganizeThread(QThread):
         self.target_folder = target_folder
         self.folder_name = folder_name
         self.save_path = save_path
-        
+    
+    def set_db_callback(self, callback):
+        self.db_callback = callback
+    
     def run(self):
         total_files = 0
         processed_files = 0
@@ -39,9 +42,11 @@ class OrganizeThread(QThread):
                     new_file_path = os.path.join(date_folder, file)
                     shutil.copy(file_path, new_file_path)
                     
+                    
                     processed_files += 1
                     progress = int((processed_files / total_files) * 100)
                     self.progress_updated.emit(progress)
+        
         
         self.completed.emit()
         
@@ -207,6 +212,7 @@ class AlbumOrganize(QWidget):
         self.progress_bar.setValue(0)
         
         self.organize_thread = OrganizeThread(source_folder, target_folder, folder_name, save_path)
+        self.organize_thread.set_db_callback(self.save_to_db)
         self.organize_thread.progress_updated.connect(self.update_progress_bar)
         self.organize_thread.completed.connect(self.on_organize_complete)
         self.organize_thread.start()
@@ -227,6 +233,7 @@ class AlbumOrganize(QWidget):
                        VALUES (?, ?, ?, ?, ?)
                        """ ,(name, name, taken_date, created_at, updated_at, path))
         self.conn.commit()
+        self.conn.close()
         
     def go_back(self):
         if self.main_window:
