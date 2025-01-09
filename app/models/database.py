@@ -10,13 +10,14 @@ def initialize_db():
     cursor.execute('''
                    CREATE TABLE IF NOT EXISTS photos(
                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                       filename TEXT NOT NULL,
-                       width INTEGER,
-                       height INTEGER,
-                       creation_date TEXT,
-                       modification_date TEXT,
-                       text TEXT DEFAULT NULL,
-                       keywords TEXT DEFAULT NULL
+                       origin_file_name TEXT NOT NULL,
+                       save_file_name TEXT,
+                       taken_dt TEXT,
+                       create_dt TEXT,
+                       update_dt TEXT,
+                       description TEXT DEFAULT NULL,
+                       keywords TEXT DEFAULT NULL,
+                       path TEXT NOT NULL
                    )
                    
                    ''')

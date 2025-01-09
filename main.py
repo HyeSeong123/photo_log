@@ -5,7 +5,6 @@ from PyQt5.QtCore import Qt
 def main():
     
     app = QApplication([])
-    app.setAttribute(Qt.AA_UseHighDpiPixmaps)
     window = MainWindow()
     window.show()
     app.exec_()

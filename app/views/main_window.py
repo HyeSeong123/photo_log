@@ -1,9 +1,7 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QStackedWidget, QLineEdit, QProgressBar
 from PyQt5.QtGui import QPixmap, QPalette, QBrush, QFont, QFontDatabase
 from PyQt5.QtCore import Qt
-from . import album_organize
-import sys
-import tkinter as tk
+from .album_organize import AlbumOrganize
 import os
 
 class MainWindow(QMainWindow):
@@ -34,7 +32,7 @@ class MainWindow(QMainWindow):
         self.main_frame = self.create_main_frame()
         self.central_stack.addWidget(self.main_frame)
         
-        self.organize_frame = self.create_organize_frame()
+        self.organize_frame = AlbumOrganize(self.central_stack, self)
         self.central_stack.addWidget(self.organize_frame)
         
         self.central_stack.setCurrentWidget(self.main_frame)
@@ -92,37 +90,6 @@ class MainWindow(QMainWindow):
         
         frame.setLayout(layout)
         return frame
-    
-    def create_organize_frame(self):
-        frame = QWidget()
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignCenter)
-        
-        self.source_folder_input = QLineEdit()
-        self.source_folder_input.setPlaceholderText("정리할 폴더 경로")
-        layout.addWidget(self.source_folder_input)
-        
-        self.target_folder_input = QLineEdit()
-        self.target_folder_input.setPlaceholderText("저장할 폴더 경로")
-        layout.addWidget(self.target_folder_input)
-
-        self.folder_name_input = QLineEdit()
-        self.folder_name_input.setPlaceholderText("폴더 이름")
-        layout.addWidget(self.folder_name_input)
-
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setValue(0)
-        layout.addWidget(self.progress_bar)        
-        
-        start_button = QPushButton("정리 시작")
-        layout.addWidget(start_button)
-        
-        back_button = QPushButton("뒤로가기")
-        back_button.clicked.connect(self.go_back_to_main)
-        layout.addWidget(back_button)
-        
-        frame.setLayout(layout)
-        return frame 
     
     def button_action(self):
         sender = self.sender()
