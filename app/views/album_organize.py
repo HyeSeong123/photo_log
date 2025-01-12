@@ -4,8 +4,10 @@ from PyQt5.QtWidgets import QMessageBox
 from datetime import datetime
 from PIL import Image
 from PIL.ExifTags import TAGS
+from ..models.database import get_db_connection
 import os
 import shutil
+import sqlite3
 
 class OrganizeThread(QThread):
     progress_updated = pyqtSignal(int)
@@ -22,6 +24,9 @@ class OrganizeThread(QThread):
         self.db_callback = callback
     
     def run(self):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
         total_files = 0
         processed_files = 0
         
@@ -42,14 +47,27 @@ class OrganizeThread(QThread):
                     new_file_path = os.path.join(date_folder, file)
                     shutil.copy(file_path, new_file_path)
                     
+                    self.save_to_db(cursor, new_file_path, file, taken_date)
                     
                     processed_files += 1
                     progress = int((processed_files / total_files) * 100)
                     self.progress_updated.emit(progress)
         
-        
+        conn.commit()
+        conn.close()
         self.completed.emit()
-        
+    
+    def save_to_db(self, cursor, path, name ,taken_date):
+        created_at = datetime.now().strftime("%Y-%m-%d")
+        updated_at = created_at
+        try:
+            cursor.execute("""
+                        INSERT INTO photos (origin_file_name, save_file_name, taken_date, create_dt, update_dt, path)
+                        VALUES (?, ?, ?, ?, ?)
+                        """ ,(name, name, taken_date, created_at, updated_at, path))
+        except sqlite3.Error as e:
+            print(f"SQLite Error: {e}")
+            
     def extract_taken_date(self, file_path):
         file_name = os.path.basename(file_path)
         try:
@@ -86,6 +104,7 @@ class AlbumOrganize(QWidget):
     def __init__(self, parent, main_window):
         super().__init__(parent)
         self.main_window = main_window
+        self.conn = get_db_connection()
         self.init_ui()
         
     def init_ui(self):
@@ -212,29 +231,19 @@ class AlbumOrganize(QWidget):
         self.progress_bar.setValue(0)
         
         self.organize_thread = OrganizeThread(source_folder, target_folder, folder_name, save_path)
-        self.organize_thread.set_db_callback(self.save_to_db)
         self.organize_thread.progress_updated.connect(self.update_progress_bar)
         self.organize_thread.completed.connect(self.on_organize_complete)
         self.organize_thread.start()
         
+        self.conn.close()
     def update_progress_bar(self, value):
         self.progress_bar.setValue(value)
     
     def on_organize_complete(self):
         QMessageBox.information(self, "완료", "사진 정리가 완료되었습니다.")
     
-    def save_to_db(self, path, name ,taken_date):
-        cursor = self.conn.cursor()
-        created_at = datetime.now().strftime("%Y-%m-%d")
-        updated_at = created_at
-        
-        cursor.execute("""
-                       INSERT INTO photos (origin_file_name, save_file_name, taken_date, create_dt, update_dt, path)
-                       VALUES (?, ?, ?, ?, ?)
-                       """ ,(name, name, taken_date, created_at, updated_at, path))
-        self.conn.commit()
-        self.conn.close()
-        
+    
+            
     def go_back(self):
         if self.main_window:
             self.main_window.go_back_to_main()

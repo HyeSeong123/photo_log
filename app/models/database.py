@@ -19,8 +19,7 @@ def initialize_db():
                        keywords TEXT DEFAULT NULL,
                        path TEXT NOT NULL
                    )
-                   
-                   ''')
+                ''')
     
     cursor.execute('''
                    CREATE TABLE IF NOT EXISTS albums(
@@ -31,3 +30,7 @@ def initialize_db():
     
     conn.commit()
     conn.close()
+    
+
+def get_db_connection():
+    return sqlite3.connect('album.db')
