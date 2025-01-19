@@ -57,13 +57,20 @@ class OrganizeThread(QThread):
         conn.close()
         self.completed.emit()
     
-    def save_to_db(self, cursor, path, name ,taken_date):
+    def save_to_db(self, cursor, name ,taken_date):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        reg_image_dir = os.path.join(base_dir, "reg_image")
+        os.makedirs(reg_image_dir, exist_ok=True)
+        
+        path = os.path.join(reg_image_dir, name)
+        
         created_at = datetime.now().strftime("%Y-%m-%d")
         updated_at = created_at
+
         try:
             cursor.execute("""
-                        INSERT INTO photos (origin_file_name, save_file_name, taken_date, create_dt, update_dt, path)
-                        VALUES (?, ?, ?, ?, ?)
+                        INSERT INTO photos (origin_file_name, save_file_name, taken_dt, create_dt, update_dt, path)
+                        VALUES (?, ?, ?, ?, ?, ?)
                         """ ,(name, name, taken_date, created_at, updated_at, path))
         except sqlite3.Error as e:
             print(f"SQLite Error: {e}")

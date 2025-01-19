@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout,
 from PyQt5.QtGui import QPixmap, QPalette, QBrush, QFont, QFontDatabase
 from PyQt5.QtCore import Qt
 from .album_organize import AlbumOrganize
+from ..database.__init__ import initialize_db
 import os
 
 class MainWindow(QMainWindow):
