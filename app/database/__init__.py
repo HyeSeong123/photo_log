@@ -17,7 +17,7 @@ def initialize_db():
                        update_dt TEXT,
                        description TEXT DEFAULT NULL,
                        keywords TEXT DEFAULT NULL,
-                       path TEXT NOT NULL
+                       path TEXT NOT NULL UNIQUE
                    )
                 ''')
     

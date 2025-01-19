@@ -45,9 +45,22 @@ class OrganizeThread(QThread):
                     os.makedirs(date_folder, exist_ok=True)
                     
                     new_file_path = os.path.join(date_folder, file)
+                    
                     shutil.copy(file_path, new_file_path)
                     
-                    self.save_to_db(cursor, new_file_path, file, taken_date)
+                    db_save_path = os.path.abspath(os.path.join("reg_image", file))
+                    print(f"absPath= {db_save_path}")
+                    # 이미지 등록된 경로에 이미 있으면 건너뛰기
+                    if os.path.exists(db_save_path):
+                        continue
+                    
+                    try:
+                        shutil.copy(file_path, db_save_path)
+                    except Exception as e:
+                        print(f"파일 복사 중 오류 발생: {e}")
+                        continue
+                    
+                    self.save_to_db(cursor, file, taken_date)
                     
                     processed_files += 1
                     progress = int((processed_files / total_files) * 100)
@@ -58,11 +71,12 @@ class OrganizeThread(QThread):
         self.completed.emit()
     
     def save_to_db(self, cursor, name ,taken_date):
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = os.path.dirname("../../")
         reg_image_dir = os.path.join(base_dir, "reg_image")
         os.makedirs(reg_image_dir, exist_ok=True)
         
-        path = os.path.join(reg_image_dir, name)
+        path = os.path.abspath(os.path.join(reg_image_dir, name))
+        path = os.path.normpath(os.path.join(path, name))
         
         created_at = datetime.now().strftime("%Y-%m-%d")
         updated_at = created_at
@@ -114,6 +128,7 @@ class AlbumOrganize(QWidget):
         self.conn = get_db_connection()
         self.init_ui()
         
+        self.last_select_folder = os.path.join(os.path.expanduser("~"), "Desktop")
     def init_ui(self):
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 90)
@@ -211,14 +226,18 @@ class AlbumOrganize(QWidget):
     
     def select_folder(self):
         sender = self.sender()
-        folder_path = QFileDialog.getExistingDirectory(self, f"{sender.text()}")
-        print(folder_path)
+        baseDirPath = self.last_select_folder
+        folder_path = QFileDialog.getExistingDirectory(self, f"{sender.text()}" ,baseDirPath)
+        
         if folder_path:
             if sender.objectName() == "source_folder_button":
                 self.source_folder_input.setText(folder_path)
+                self.last_select_folder = os.path.dirname(folder_path)
+                
             elif sender.objectName() == "target_folder_button":
                 self.target_folder_input.setText(folder_path)
-    
+                self.last_select_folder = os.path.dirname(folder_path)
+                
     def start_organize(self):
         source_folder = self.source_folder_input.text()
         target_folder = self.target_folder_input.text()
@@ -233,6 +252,11 @@ class AlbumOrganize(QWidget):
             return
         
         save_path = os.path.join(target_folder, folder_name)
+        
+        if os.path.exists(save_path):
+            QMessageBox.warning(self, "경고", f"이미 존재하는 폴더명 입니다. 다른 이름으로 지정해주세요.")
+            return
+            
         os.makedirs(save_path, exist_ok=True)
 
         self.progress_bar.setValue(0)

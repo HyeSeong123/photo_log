@@ -19,5 +19,3 @@ class Photo:
                        ''', (self.photo_name, self.width, self.height, self.creation_date, self.modification_date, self.text, self.keywords))
         conn.commit()
         conn.close()
-        
-        

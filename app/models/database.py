@@ -5,4 +5,4 @@ DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../image_
 
 
 def get_db_connection():
-    return sqlite3.connect('album.db')
+    return sqlite3.connect(DB_PATH)
