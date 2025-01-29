@@ -8,6 +8,7 @@ from ..models.database import get_db_connection
 import os
 import shutil
 import sqlite3
+import piexif
 
 class OrganizeThread(QThread):
     progress_updated = pyqtSignal(int)
@@ -49,16 +50,9 @@ class OrganizeThread(QThread):
                     shutil.copy(file_path, new_file_path)
                     
                     db_save_path = os.path.abspath(os.path.join("reg_image", file))
-                    print(f"absPath= {db_save_path}")
                     # 이미지 등록된 경로에 이미 있으면 건너뛰기
-                    if os.path.exists(db_save_path):
-                        continue
-                    
-                    try:
+                    if not os.path.exists(db_save_path):
                         shutil.copy(file_path, db_save_path)
-                    except Exception as e:
-                        print(f"파일 복사 중 오류 발생: {e}")
-                        continue
                     
                     self.save_to_db(cursor, file, taken_date)
                     
@@ -90,37 +84,35 @@ class OrganizeThread(QThread):
             print(f"SQLite Error: {e}")
             
     def extract_taken_date(self, file_path):
+
         file_name = os.path.basename(file_path)
         try:
             timestamp = int(file_name.split('.')[0])
             if len(str(timestamp)) == 13:
                 timestamp = timestamp / 1000
-                
-            date = datetime.fromtimestamp(timestamp)
-            return date.strftime("%Y-%m-%d")
+                date = datetime.fromtimestamp(timestamp)
+                return date.strftime("%Y-%m-%d")
         except (ValueError, OSError):
-            pass
+            print("타임스탬프 조건 실패. 다음 조건으로 진행")
         
         if file_name.startswith("KakaoTalk_"):
             try:
                 date_str = file_name.split("_")[1].split(".")[0]
-                print(f"date_str={date_str}")
                 return datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
             except ValueError:
-                pass
-            
+                print("KakaoTalk 조건 실패. 다음 조건으로 진행")
+        
         try:
             image = Image.open(file_path)
             exif_data = image._getexif()
             if exif_data:
                 for tag, value in exif_data.items():
                     tag_name = TAGS.get(tag, tag)
-                    if tag_name == "DateTimeOriginal":
+                    if tag_name in ("DateTimeOriginal", "Date/Time Original"):
                         return datetime.strptime(value, "%Y:%m:%d %H:%M:%S").strftime("%Y-%m-%d")
         except Exception as e :
             print(f"EXIF 데이터를 읽을 수 없습니다: {e}")
-        
-        return datetime.now().strftime("%Y-%m-%d")
+            return datetime.now().strftime("%Y-%m-%d")
 class AlbumOrganize(QWidget):
     def __init__(self, parent, main_window):
         super().__init__(parent)

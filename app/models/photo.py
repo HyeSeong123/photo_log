@@ -1,21 +1,22 @@
 import sqlite3
 
 class Photo:
-    def __init__(self, photo_name, width, height, creation_date, modification_date, text=None, keywords=None):
-        self.photo_name = photo_name
-        self.width = width
-        self.height = height
-        self.creation_date = creation_date
-        self.modification_date = modification_date
-        self.text = text
-        self.keywords = keywords
+    def __init__(self, db_path):
+        print(f"db_path: {db_path}")
+        self.conn = sqlite3.connect(db_path)
+        self.cursor = self.conn.cursor()
         
-    def save(self):
-        conn = sqlite3.connect('database/album.db')
-        cursor = conn.cursor()
-        cursor.execute('''
-                       INSERT INTO photos ( photo_name, width, height, creation_date, modification_date, text, keywords)
-                       VALUSE(?,?,?,?,?,?,?)
-                       ''', (self.photo_name, self.width, self.height, self.creation_date, self.modification_date, self.text, self.keywords))
-        conn.commit()
-        conn.close()
+    def fetch_photos_by_date(self):
+        query = """
+        SELECT CREATION_DATE, FILE_NAME, FILE_PATH FROM PHOTOS
+        ORDER BY CREATION_DT ASC;
+        """
+        self.cursor.execute(query)
+        photos = self.cursor.fetchall()
+        result = {}
+        
+        for date, name, path in photos:
+            if date not in result:
+                result[date] = []
+                result[date].append({'name': name, 'path': path})
+        return result
